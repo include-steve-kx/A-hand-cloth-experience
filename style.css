@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+video {
+    clear: both;
+    /*display: none;*/
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 300px;
+    transform: rotateY(180deg);
+}
+
+.canvas {
+    z-index: 1;
+    position: absolute;
+    pointer-events: none;
+}
+
+.output_canvas {
+    transform: rotateY(180deg);
+}
+
+#three-js-container {
+    z-index: 10;
+}
