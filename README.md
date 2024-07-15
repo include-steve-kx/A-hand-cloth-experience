@@ -1,6 +1,6 @@
 ## Demo Video
 
-[![Watch the video](./output.gif)]([https://www.youtube.com/watch?v=your_video_id](https://youtu.be/2O5vTON7IVg?si=2lkfs8JJOC_9SCDD))
+https://github.com/user-attachments/assets/91ab4900-ef30-4168-bb9e-358912e155cf
 
 ## Run locally
 Clone the repo
