@@ -1,6 +1,6 @@
-import * as THREE from '/src/three.module.js';
-import { OrbitControls } from "/src/OrbitControls.js";
-import { remap } from "/src/math.module.js";
+import * as THREE from './src/three.module.js';
+import { OrbitControls } from "./src/OrbitControls.js";
+import { remap } from "./src/math.module.js";
 // import { updateCollisionObjects, updateCloth, balanceLoad } from '/clothSimulation.js';
 
 let camera, scene, renderer;
@@ -47,9 +47,12 @@ let handGroups = {};
 
 function createWorker() {
     let posArr, posAttri, i, j;
-    worker = new Worker('./clothSimulation.js');
+    // worker = new Worker('./clothSimulation.js');
+    worker = new Worker(new URL('./clothSimulation.js', import.meta.url), {
+        type: 'module',
+    })
     worker.postMessage({command: 'balanceLoad'});
-    worker.addEventListener('message', (e) => {
+    worker.onmessage = (e) => {
         let data = e.data;
         switch (data.commandDone) {
             case 'balanceLoadDone':
@@ -77,7 +80,7 @@ function createWorker() {
                 removeHandGroup(data.colliderGroup.id);
                 break;
         }
-    })
+    }
 }
 
 const ballRadius = 0.01;
@@ -193,7 +196,12 @@ function init() {
     //     // console.log(mesh1.position);
     // }, 10);
 
-    scene.add(mesh);
+    // geometry = new THREE.SphereGeometry(1, 32, 16);
+    // material = new THREE.MeshStandardMaterial({
+    //     color: 0x0000ff,
+    // });
+    // mesh = new THREE.Mesh(geometry, material);
+    // scene.add(mesh);
 
     // orbit control
     controls = new OrbitControls(camera, renderer.domElement);
@@ -202,6 +210,8 @@ function init() {
     createWorker();
     setupEventListeners();
 }
+
+window.sceneChildren = () => {return scene.children;};
 
 function addToScene(object) {
     scene.add(object);
@@ -223,11 +233,14 @@ const hands = {}; // an object of Hand instances
 const tmp = new THREE.Vector3();
 
 class Hand {
-    constructor(landmarks, handIndex) { // an array, each index has .x/y/z fields, corresponding to each joint's position
+    constructor(landmarks, handIndex, scene) { // an array, each index has .x/y/z fields, corresponding to each joint's position
         this.handIndex = handIndex;
         this.landmarks = [];
         this.handContainer = null;
         this.handOffset = new THREE.Vector3(0, 0, 0);
+
+        this.scene = scene;
+        // console.log(this.scene);
 
         this.initializeHand();
 
@@ -245,7 +258,8 @@ class Hand {
 
     initializeHand() {
         this.handContainer = new THREE.Group();
-        scene.add(this.handContainer);
+        this.scene.add(this.handContainer);
+        // console.log(this.scene);
     }
 
     updatePosition(landmarks) {
@@ -284,8 +298,8 @@ class Hand {
 }
 
 let handsToWorker = {};
-function addHand(landmarks, handIndex) {
-    hands[`${handIndex}`] = new Hand(landmarks, handIndex);
+function addHand(landmarks, handIndex, scene) {
+    hands[`${handIndex}`] = new Hand(landmarks, handIndex, scene);
     handCount++;
 
     // todo Steve: instead, send a message to clothSimulation web worker with new collision object info, to update them in the worker
@@ -301,9 +315,9 @@ function addHand(landmarks, handIndex) {
     })
 }
 
-function updateHand(landmarks, handIndex) {
+function updateHand(landmarks, handIndex, scene) {
     if (hands[`${handIndex}`] === undefined) {
-        addHand(landmarks, handIndex);
+        addHand(landmarks, handIndex, scene);
         return;
     }
     hands[`${handIndex}`].updatePosition(landmarks);
@@ -334,6 +348,14 @@ function deleteAllHands() { // todo Steve: for now, just delete all the hands an
     })
 }
 
+function getInternals() {
+    return {
+        scene,
+        renderer,
+        camera,
+    };
+}
+
 function getHandCount() {
     return handCount;
 }
@@ -354,9 +376,14 @@ function animate() {
     worker.postMessage({command: 'updateCloth'});
 
     renderer.render(scene, camera);
+
+    // console.log('animate', scene);
 }
 
-init();
-animate();
+window.onload = () => {
+    init();
+    // console.log('init', scene);
+    animate();
+}
 
-export { updateHand, deleteAllHands, getHandCount, addToScene };
+export { updateHand, deleteAllHands, getHandCount, addToScene, getInternals };

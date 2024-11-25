@@ -1,5 +1,5 @@
-import { HandLandmarker, FilesetResolver } from "/src/task-vision.js";
-import { updateHand, deleteAllHands, getHandCount } from './threejsScene.js';
+import { HandLandmarker, FilesetResolver } from "./src/task-vision.js";
+import { updateHand, deleteAllHands, getHandCount, getInternals } from './threejsScene.js';
 
 let handLandmarker = undefined;
 
@@ -97,9 +97,15 @@ async function predictWebcam() {
 
     let handCount = getHandCount();
 
+    // console.log(getInternals());
+    // return;
+
+    let scene = getInternals().scene;
+    if (!scene) return;
+
     if (results.landmarks.length >= handCount) {
         results.landmarks.forEach((landmarks, index) => { // todo Steve: multiple hands -> one hand
-            updateHand(landmarks, index);
+            updateHand(landmarks, index, scene);
             // addHand(landmarks, index);
             // landmarks.forEach((landmark, index) => { // todo Steve: one hand -> different joints
                 // console.log(`For landmark #${index}, the world position is (${landmark.x}, ${landmark.y}, ${landmark.z}).`);
@@ -108,7 +114,7 @@ async function predictWebcam() {
     } else {
         deleteAllHands();
         results.landmarks.forEach((landmarks, index) => { // todo Steve: multiple hands -> one hand
-            updateHand(landmarks, index);
+            updateHand(landmarks, index, scene);
         })
     }
 }

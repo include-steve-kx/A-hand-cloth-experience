@@ -1,5 +1,7 @@
-importScripts('/src/three.js');
-importScripts('/src/math.js');
+// importScripts(`${import.meta.env.BASE_URL}src/three.js`);
+// importScripts(`${import.meta.env.BASE_URL}src/math.js`);
+import * as THREE from './src/three.module.js';
+import {clamp, remap01, remap} from './src/math.module.js';
 
 const MASS = 0.1;
 const DAMPING = 0.03;
@@ -694,10 +696,11 @@ function updateCloth() {
     }
 }
 
-self.addEventListener('message', (e) => {
+self.onmessage = (e) => {
     let data = e.data;
     switch (data.command) {
         case 'balanceLoad':
+            console.log('balance load event received in worker')
             balanceLoad();
             break;
         case 'updateCloth':
@@ -722,4 +725,4 @@ self.addEventListener('message', (e) => {
             }, 10);
             break;
     }
-})
+}
